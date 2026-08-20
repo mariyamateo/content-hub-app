@@ -6,7 +6,10 @@ export class PageComponent extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Page', required: true })
   pageId: Types.ObjectId;
 
-  @Prop({ required: true, enum: ['hero', 'text', 'image', 'button', 'gallery', 'cta'] })
+  @Prop({
+    required: true,
+    enum: ['hero', 'text', 'image', 'button', 'gallery', 'cta'],
+  })
   type: string;
 
   @Prop({ required: true })

@@ -15,4 +15,4 @@ async function bootstrap() {
   console.log(`✅ NestJS app running on http://localhost:${port}`);
 }
 
-bootstrap();
+void bootstrap();
