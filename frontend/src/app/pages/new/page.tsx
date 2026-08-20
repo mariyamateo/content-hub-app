@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -9,8 +9,14 @@ import { Page } from '@/lib/types';
 
 export default function CreatePagePage() {
   const router = useRouter();
-  const { authenticated } = useAuth();
+  const { authenticated, loading } = useAuth();
   const [title, setTitle] = useState('');
+
+  useEffect(() => {
+    if (!loading && !authenticated) {
+      router.push('/auth/login');
+    }
+  }, [authenticated, loading, router]);
 
   const createMutation = useMutation({
     mutationFn: async (title: string) => {

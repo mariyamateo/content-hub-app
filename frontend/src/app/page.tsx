@@ -15,7 +15,7 @@ export default function Dashboard() {
   const { data: pages = [], isLoading: pagesLoading } = useQuery<Page[]>({
     queryKey: ['pages'],
     queryFn: async () => {
-      const res = await api.get('/pages');
+      const res = await api.get<Page[]>('/pages');
       return res.data;
     },
     enabled: authenticated && !loading,
@@ -73,19 +73,31 @@ export default function Dashboard() {
                 <p className="text-gray-600 text-sm mb-4">
                   Status: <span className="font-medium">{page.status}</span>
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-col">
                   <Link
                     href={`/pages/${page.id}/edit`}
                     className="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-center hover:bg-blue-700 text-sm"
                   >
                     Edit
                   </Link>
-                  <Link
-                    href={`/pages/${page.id}/analytics`}
-                    className="flex-1 px-3 py-2 bg-gray-200 text-gray-900 rounded text-center hover:bg-gray-300 text-sm"
-                  >
-                    Analytics
-                  </Link>
+                  {page.status === 'published' && (
+                    <>
+                      <a
+                        href={`/pub/${page.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-center hover:bg-green-700 text-sm"
+                      >
+                        View Public
+                      </a>
+                      <Link
+                        href={`/pages/${page.id}/analytics`}
+                        className="flex-1 px-3 py-2 bg-purple-600 text-white rounded text-center hover:bg-purple-700 text-sm"
+                      >
+                        Analytics
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

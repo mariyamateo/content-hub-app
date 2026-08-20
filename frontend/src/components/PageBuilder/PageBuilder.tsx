@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { Page, PageComponent } from '@/lib/types';
 import { ComponentPalette } from './ComponentPalette';
@@ -24,6 +25,7 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
     'idle',
   );
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryClient = useQueryClient();
 
   const markSaved = () => {
     setSaveStatus('saved');
@@ -97,6 +99,22 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
     },
   });
 
+  // Publish/unpublish mutation
+  const publishMutation = useMutation({
+    mutationFn: async (status: 'draft' | 'published') => {
+      const res = await api.put<Page>(`/pages/${pageId}`, { status });
+      return res.data;
+    },
+    onSuccess: (updatedPage) => {
+      // The PUT /pages/:id response doesn't include `components` — merge
+      // into the cached page rather than replacing it, so the editor's
+      // already-loaded components aren't dropped from the cache.
+      queryClient.setQueryData<Page>(['page', pageId], (old) =>
+        old ? { ...old, ...updatedPage } : old,
+      );
+    },
+  });
+
   // Load page components
   useEffect(() => {
     if (page?.components) {
@@ -158,6 +176,42 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
           )}
           {saveStatus === 'saved' && (
             <span className="text-sm text-green-600">✓ Saved</span>
+          )}
+
+          {page?.status === 'draft' && (
+            <button
+              onClick={() => publishMutation.mutate('published')}
+              disabled={publishMutation.isPending}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+            >
+              Publish
+            </button>
+          )}
+
+          {page?.status === 'published' && (
+            <>
+              <a
+                href={`/pub/${page.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                View Public
+              </a>
+              <button
+                onClick={() => publishMutation.mutate('draft')}
+                disabled={publishMutation.isPending}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400"
+              >
+                Unpublish
+              </button>
+              <Link
+                href={`/pages/${pageId}/analytics`}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                Analytics
+              </Link>
+            </>
           )}
         </div>
       </div>

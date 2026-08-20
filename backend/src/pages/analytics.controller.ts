@@ -11,11 +11,20 @@ import { JwtAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/authenticated-user.interface';
 import { AnalyticsService } from './analytics.service';
+import { PagesService } from './pages.service';
 import { TrackEventDto } from './dto/track-event.dto';
 
 @Controller()
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly pagesService: PagesService,
+  ) {}
+
+  @Get('public/pages/:slug')
+  async getPublishedPage(@Param('slug') slug: string) {
+    return this.pagesService.getPublishedPage(slug);
+  }
 
   @Get('pages/:pageId/analytics')
   @UseGuards(JwtAuthGuard)

@@ -56,9 +56,14 @@ export function ComponentRenderer({
 
   const containerClass = `${baseClass} p-4 cursor-pointer transition min-h-20 relative`;
 
+  // Only stop propagation when there's actually an editor-selection handler
+  // to run — PublicPageRenderer relies on this click bubbling up to its own
+  // wrapper (for click-tracking) and never passes `onClick`.
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClick?.();
+    if (onClick) {
+      e.stopPropagation();
+      onClick();
+    }
   };
 
   switch (component.type) {
