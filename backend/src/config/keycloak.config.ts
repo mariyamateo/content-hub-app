@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.interface';
+import { User } from '../pages/schemas/user.schema';
 
 interface KeycloakJwtPayload {
   sub: string;
@@ -13,7 +16,7 @@ interface KeycloakJwtPayload {
 
 @Injectable()
 export class KeycloakStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor() {
+  constructor(@InjectModel('User') private readonly userModel: Model<User>) {
     super({
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
@@ -29,8 +32,17 @@ export class KeycloakStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  validate(payload: KeycloakJwtPayload): AuthenticatedUser {
+  async validate(payload: KeycloakJwtPayload): Promise<AuthenticatedUser> {
+    // Pages reference the local User's Mongo _id, not the Keycloak subject —
+    // sync/upsert here so every authenticated request resolves both.
+    const user = await this.userModel.findOneAndUpdate(
+      { keycloakId: payload.sub },
+      { keycloakId: payload.sub, email: payload.email, name: payload.name },
+      { upsert: true, new: true },
+    );
+
     return {
+      id: user._id.toString(),
       keycloakId: payload.sub,
       email: payload.email,
       name: payload.name,

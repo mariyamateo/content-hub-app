@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 
 @Schema()
 export class PageComponent extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Page', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Page', required: true })
   pageId: Types.ObjectId;
 
   @Prop({
