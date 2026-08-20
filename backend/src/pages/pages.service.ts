@@ -66,7 +66,9 @@ export class PagesService {
 
   // Get page by ID
   async getPageById(userId: string, pageId: string) {
-    const page = await this.pageModel.findById(pageId).populate('components');
+    const page = await this.pageModel
+      .findById(pageId)
+      .populate<{ components: PageComponent[] }>('components');
 
     if (!page) {
       throw new NotFoundException('Page not found');
@@ -83,7 +85,7 @@ export class PagesService {
       slug: page.slug,
       status: page.status,
       publishedAt: page.publishedAt,
-      components: page.components,
+      components: page.components.map(formatComponent),
       createdAt: page.createdAt,
       updatedAt: page.updatedAt,
     };
@@ -152,7 +154,7 @@ export class PagesService {
   async getPublishedPage(slug: string) {
     const page = await this.pageModel
       .findOne({ slug, status: 'published' })
-      .populate('components');
+      .populate<{ components: PageComponent[] }>('components');
 
     if (!page) {
       throw new NotFoundException('Page not found');
@@ -162,8 +164,23 @@ export class PagesService {
       id: page._id,
       title: page.title,
       slug: page.slug,
-      components: page.components,
+      components: page.components.map(formatComponent),
       publishedAt: page.publishedAt,
     };
   }
+}
+
+// getPageById/getPublishedPage populate the full PageComponent documents,
+// which serialize with `_id` — reshape to the `{ id, ... }` contract the
+// rest of the API (create/update/delete component) already returns, so the
+// frontend can reliably key/select components by `.id`.
+function formatComponent(component: PageComponent) {
+  return {
+    id: component._id,
+    type: component.type,
+    order: component.order,
+    properties: component.properties,
+    createdAt: component.createdAt,
+    updatedAt: component.updatedAt,
+  };
 }
