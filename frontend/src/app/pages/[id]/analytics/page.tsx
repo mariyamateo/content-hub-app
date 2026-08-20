@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Analytics } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
-import Link from 'next/link';
+import { AppHeader } from '@/components/AppHeader';
 import {
   LineChart,
   Line,
@@ -82,16 +82,11 @@ export default function AnalyticsPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <Link href="/" className="px-4 py-2 text-gray-600 hover:text-gray-900">
-            ← Back to Dashboard
-          </Link>
-        </div>
-      </nav>
+      <AppHeader />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <h2 className="text-xl font-semibold mb-6">Analytics</h2>
+
         {/* Date Range Filter */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
           <h2 className="text-lg font-semibold mb-4">Date Range</h2>

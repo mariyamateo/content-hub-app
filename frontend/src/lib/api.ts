@@ -17,7 +17,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 redirects to login
+// Handle error responses
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -27,6 +27,15 @@ api.interceptors.response.use(
         window.location.href = '/auth/login';
       }
     }
+
+    if (error.response?.status === 403) {
+      console.error('Access forbidden:', error.response.data);
+    }
+
+    if (error.response?.status === 500) {
+      console.error('Server error:', error.response.data);
+    }
+
     return Promise.reject(error);
   },
 );

@@ -7,6 +7,20 @@ import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 import { Page } from '@/lib/types';
 import Link from 'next/link';
+import { AppHeader } from '@/components/AppHeader';
+
+function PageCardSkeleton() {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+      <div className="h-6 bg-gray-200 rounded mb-4" />
+      <div className="h-4 bg-gray-200 rounded mb-4" />
+      <div className="space-y-2">
+        <div className="h-8 bg-gray-200 rounded" />
+        <div className="h-8 bg-gray-200 rounded" />
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -29,25 +43,35 @@ export default function Dashboard() {
 
   if (loading || pagesLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">Content Hub</h1>
+            <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse" />
+          </div>
+        </nav>
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <PageCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Content Hub</h1>
-          <Link
-            href="/pages/new"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Create Page
-          </Link>
-        </div>
-      </nav>
+      <AppHeader>
+        <Link
+          href="/pages/new"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          Create Page
+        </Link>
+      </AppHeader>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-xl font-semibold mb-6">My Pages</h2>
@@ -57,7 +81,7 @@ export default function Dashboard() {
             <p className="text-gray-600 mb-4">No pages yet</p>
             <Link
               href="/pages/new"
-              className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               Create your first page
             </Link>
@@ -69,14 +93,25 @@ export default function Dashboard() {
                 key={page.id}
                 className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition"
               >
-                <h3 className="text-lg font-semibold mb-2">{page.title}</h3>
+                <h3 className="text-lg font-semibold mb-2 truncate">
+                  {page.title}
+                </h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Status: <span className="font-medium">{page.status}</span>
+                  Status:{' '}
+                  <span
+                    className={`font-medium ${
+                      page.status === 'published'
+                        ? 'text-green-600'
+                        : 'text-yellow-600'
+                    }`}
+                  >
+                    {page.status}
+                  </span>
                 </p>
                 <div className="flex gap-2 flex-col">
                   <Link
                     href={`/pages/${page.id}/edit`}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-center hover:bg-blue-700 text-sm"
+                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded text-center hover:bg-blue-700 text-sm transition"
                   >
                     Edit
                   </Link>
@@ -86,13 +121,13 @@ export default function Dashboard() {
                         href={`/pub/${page.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-center hover:bg-green-700 text-sm"
+                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-center hover:bg-green-700 text-sm transition"
                       >
                         View Public
                       </a>
                       <Link
                         href={`/pages/${page.id}/analytics`}
-                        className="flex-1 px-3 py-2 bg-purple-600 text-white rounded text-center hover:bg-purple-700 text-sm"
+                        className="flex-1 px-3 py-2 bg-purple-600 text-white rounded text-center hover:bg-purple-700 text-sm transition"
                       >
                         Analytics
                       </Link>

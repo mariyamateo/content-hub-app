@@ -19,3 +19,34 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Smooth transitions */
+button,
+a,
+input {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focus states. `ring` is a Tailwind utility, not a CSS property — @apply
+   is what actually generates a visible focus ring here, so removing the
+   default outline doesn't leave keyboard users with no focus indicator. */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none ring-2 ring-blue-500;
+}

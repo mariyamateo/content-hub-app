@@ -2,7 +2,7 @@
 
 import { PageComponent } from '@/lib/types';
 import { COMPONENT_DEFINITIONS } from '@/lib/componentDefinitions';
-import { asString, asNumber } from '@/lib/propertyValue';
+import { asString, asNumber, asGalleryImages, GalleryImage } from '@/lib/propertyValue';
 import React, { useEffect, useRef, useState } from 'react';
 
 interface PropertyEditorProps {
@@ -82,6 +82,38 @@ export function PropertyEditor({
     }, AUTO_SAVE_DELAY_MS);
   };
 
+  const handleImagesFieldChange = (
+    fieldName: string,
+    images: GalleryImage[],
+  ) => {
+    handlePropertyChange(fieldName, images);
+  };
+
+  const addImage = (fieldName: string) => {
+    const images = asGalleryImages(localProperties[fieldName]);
+    handleImagesFieldChange(fieldName, [...images, { url: '', alt: '' }]);
+  };
+
+  const updateImage = (
+    fieldName: string,
+    index: number,
+    patch: Partial<GalleryImage>,
+  ) => {
+    const images = asGalleryImages(localProperties[fieldName]);
+    handleImagesFieldChange(
+      fieldName,
+      images.map((img, i) => (i === index ? { ...img, ...patch } : img)),
+    );
+  };
+
+  const removeImage = (fieldName: string, index: number) => {
+    const images = asGalleryImages(localProperties[fieldName]);
+    handleImagesFieldChange(
+      fieldName,
+      images.filter((_, i) => i !== index),
+    );
+  };
+
   return (
     <div className="bg-white border-l border-gray-200 p-4 w-80 overflow-y-auto">
       <h3 className="font-semibold text-gray-900 mb-4">
@@ -141,6 +173,61 @@ export function PropertyEditor({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            )}
+
+            {field.type === 'images' && (
+              <div className="space-y-3">
+                {asGalleryImages(localProperties[field.name]).map(
+                  (img, index) => (
+                    <div
+                      key={index}
+                      className="p-2 border border-gray-200 rounded-lg space-y-2"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">
+                          Image {index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(field.name, index)}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <input
+                        type="url"
+                        value={img.url}
+                        onChange={(e) =>
+                          updateImage(field.name, index, {
+                            url: e.target.value,
+                          })
+                        }
+                        placeholder="Image URL"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={img.alt}
+                        onChange={(e) =>
+                          updateImage(field.name, index, {
+                            alt: e.target.value,
+                          })
+                        }
+                        placeholder="Alt text"
+                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  ),
+                )}
+                <button
+                  type="button"
+                  onClick={() => addImage(field.name)}
+                  className="w-full px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  + Add Image
+                </button>
+              </div>
             )}
 
             {field.type === 'select' && field.options && (

@@ -6,7 +6,7 @@ export function ComponentPalette() {
   const components = Object.values(COMPONENT_DEFINITIONS);
 
   return (
-    <div className="bg-white border-r border-gray-200 p-4 overflow-y-auto">
+    <div className="h-full bg-white border-r border-gray-200 p-4 overflow-y-auto">
       <h3 className="font-semibold text-gray-900 mb-4">Components</h3>
 
       <div className="space-y-2">

@@ -85,7 +85,13 @@ export class PagesService {
       slug: page.slug,
       status: page.status,
       publishedAt: page.publishedAt,
-      components: page.components.map(formatComponent),
+      // `page.components` (the ObjectId[] field) preserves insertion order,
+      // not the components' own `order` field — populate() returns them in
+      // that array's order regardless of what reorderComponents() set, so
+      // sort explicitly or a persisted reorder silently reverts on refetch.
+      components: page.components
+        .map(formatComponent)
+        .sort((a, b) => a.order - b.order),
       createdAt: page.createdAt,
       updatedAt: page.updatedAt,
     };
@@ -164,7 +170,9 @@ export class PagesService {
       id: page._id,
       title: page.title,
       slug: page.slug,
-      components: page.components.map(formatComponent),
+      components: page.components
+        .map(formatComponent)
+        .sort((a, b) => a.order - b.order),
       publishedAt: page.publishedAt,
     };
   }

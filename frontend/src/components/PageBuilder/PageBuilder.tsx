@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { logout } from '@/lib/keycloak';
 import { Page, PageComponent } from '@/lib/types';
 import { ComponentPalette } from './ComponentPalette';
 import { Canvas } from './Canvas';
@@ -15,6 +16,26 @@ interface PageBuilderProps {
 }
 
 const SAVED_INDICATOR_MS = 2000;
+
+function Spinner() {
+  return (
+    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
+    </svg>
+  );
+}
 
 export function PageBuilder({ pageId }: PageBuilderProps) {
   const [selectedComponentId, setSelectedComponentId] = useState<
@@ -115,6 +136,16 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
     },
   });
 
+  // Reorder components mutation
+  const reorderMutation = useMutation({
+    mutationFn: async (order: string[]) => {
+      setSaveStatus('saving');
+      await api.put(`/pages/${pageId}/components/reorder`, { order });
+      return order;
+    },
+    onSuccess: () => markSaved(),
+  });
+
   // Load page components
   useEffect(() => {
     if (page?.components) {
@@ -148,6 +179,20 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
     deleteComponentMutation.mutate(id);
   };
 
+  // Canvas computes the new order client-side (via dnd-kit's arrayMove) and
+  // hands back the full ordered id list — reflect it locally right away so
+  // the drag doesn't visually snap back while the request is in flight.
+  const handleReorderComponents = (ids: string[]) => {
+    setComponents((prev) => {
+      const byId = new Map(prev.map((c) => [c.id, c]));
+      const reordered = ids
+        .map((id) => byId.get(id))
+        .filter((c): c is PageComponent => Boolean(c));
+      return reordered.length === prev.length ? reordered : prev;
+    });
+    reorderMutation.mutate(ids);
+  };
+
   const selectedComponent =
     components.find((c) => c.id === selectedComponentId) || null;
 
@@ -164,6 +209,12 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
       {/* Header */}
       <div className="border-b border-gray-200 bg-white px-6 py-4 flex justify-between items-center">
         <div>
+          <Link
+            href="/"
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            ← Dashboard
+          </Link>
           <h1 className="text-2xl font-bold text-gray-900">{page?.title}</h1>
           <p className="text-sm text-gray-600">
             Status: <span className="font-medium">{page?.status}</span>
@@ -182,9 +233,14 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
             <button
               onClick={() => publishMutation.mutate('published')}
               disabled={publishMutation.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed inline-flex items-center gap-2"
             >
-              Publish
+              {publishMutation.isPending &&
+                publishMutation.variables === 'published' && <Spinner />}
+              {publishMutation.isPending &&
+              publishMutation.variables === 'published'
+                ? 'Publishing...'
+                : 'Publish'}
             </button>
           )}
 
@@ -201,9 +257,14 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
               <button
                 onClick={() => publishMutation.mutate('draft')}
                 disabled={publishMutation.isPending}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400"
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
-                Unpublish
+                {publishMutation.isPending &&
+                  publishMutation.variables === 'draft' && <Spinner />}
+                {publishMutation.isPending &&
+                publishMutation.variables === 'draft'
+                  ? 'Unpublishing...'
+                  : 'Unpublish'}
               </button>
               <Link
                 href={`/pages/${pageId}/analytics`}
@@ -213,13 +274,20 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
               </Link>
             </>
           )}
+
+          <button
+            onClick={() => logout()}
+            className="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition"
+          >
+            Log out
+          </button>
         </div>
       </div>
 
       {/* Main Editor Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel: Component Palette */}
-        <div className="w-48">
+        <div className="w-48 min-h-0">
           <ComponentPalette />
         </div>
 
@@ -230,6 +298,7 @@ export function PageBuilder({ pageId }: PageBuilderProps) {
           onSelectComponent={setSelectedComponentId}
           onAddComponent={handleAddComponent}
           onDeleteComponent={handleDeleteComponent}
+          onReorderComponents={handleReorderComponents}
         />
 
         {/* Right Panel: Property Editor */}

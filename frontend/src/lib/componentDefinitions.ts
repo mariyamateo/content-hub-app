@@ -11,7 +11,7 @@ export interface ComponentDefinition {
   propertyFields: Array<{
     name: string;
     label: string;
-    type: 'text' | 'textarea' | 'select' | 'number' | 'url' | 'array';
+    type: 'text' | 'textarea' | 'select' | 'number' | 'url' | 'images';
     options?: Array<{ value: string; label: string }>;
     required?: boolean;
   }>;
@@ -151,6 +151,11 @@ export const COMPONENT_DEFINITIONS: Record<string, ComponentDefinition> = {
       columns: 2,
     },
     propertyFields: [
+      {
+        name: 'images',
+        label: 'Images',
+        type: 'images',
+      },
       {
         name: 'columns',
         label: 'Columns',

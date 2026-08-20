@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { initKeycloak } from '@/lib/keycloak';
+import { validateEnv } from '@/lib/validateEnv';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import '@/styles/globals.css';
 
 export default function RootLayout({
@@ -12,6 +14,14 @@ export default function RootLayout({
 }) {
   const [queryClient] = useState(() => new QueryClient());
   const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    try {
+      validateEnv();
+    } catch (error) {
+      console.error('Environment validation failed:', error);
+    }
+  }, []);
 
   useEffect(() => {
     initKeycloak().then(() => setInitialized(true));
@@ -32,9 +42,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50">
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
